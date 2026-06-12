@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  phone     String
+  password  String
+  role      Role      @default(PASSENGER)
+  agencyId  String?
+  agency    Agency?   @relation(fields: [agencyId], references: [id])
+  bookings  Booking[]
+  driver    Driver?
+  createdAt DateTime  @default(now())
+}
+
+enum Role {
+  PASSENGER
+  AGENCY_ADMIN
+  DRIVER
+  SYSTEM_ADMIN
+}
+
+model Station {
+  id             String          @id @default(uuid())
+  name           String
+  city           String
+  address        String?
+  agencyStations AgencyStation[]
+  routesFrom     Route[]         @relation("FromStation")
+  routesTo       Route[]         @relation("ToStation")
+}
+
+model Agency {
+  id             String          @id @default(uuid())
+  name           String
+  logo           String?
+  email          String
+  phone          String
+  isApproved     Boolean         @default(false)
+  agencyStations AgencyStation[]
+  buses          Bus[]
+  routes         Route[]
+  drivers        Driver[]
+  users          User[]
+}
+
+model AgencyStation {
+  id            String   @id @default(uuid())
+  agencyId      String
+  stationId     String
+  agency        Agency   @relation(fields: [agencyId], references: [id])
+  station       Station  @relation(fields: [stationId], references: [id])
+  counterNumber String?
+  isActive      Boolean  @default(true)
+
+  @@unique([agencyId, stationId])
+}
+
+model Bus {
+  id          String     @id @default(uuid())
+  agencyId    String
+  agency      Agency     @relation(fields: [agencyId], references: [id])
+  plateNumber String     @unique
+  capacity    Int
+  busType     String?
+  schedules   Schedule[]
+}
+
+model Route {
+  id            String     @id @default(uuid())
+  agencyId      String
+  agency        Agency     @relation(fields: [agencyId], references: [id])
+  fromStationId String
+  toStationId   String
+  fromStation   Station    @relation("FromStation", fields: [fromStationId], references: [id])
+  toStation     Station    @relation("ToStation", fields: [toStationId], references: [id])
+  distanceKm    Float?
+  schedules     Schedule[]
+
+  @@unique([agencyId, fromStationId, toStationId])
+}
+
+model Schedule {
+  id            String         @id @default(uuid())
+  routeId       String
+  route         Route          @relation(fields: [routeId], references: [id])
+  busId         String
+  bus           Bus            @relation(fields: [busId], references: [id])
+  driverId      String?
+  driver        Driver?        @relation(fields: [driverId], references: [id])
+  departureTime DateTime
+  arrivalTime   DateTime?
+  price         Float
+  status        ScheduleStatus @default(SCHEDULED)
+  bookings      Booking[]
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  BOARDING
+  DEPARTED
+  ARRIVED
+  CANCELLED
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  passengerId String
+  passenger   User          @relation(fields: [passengerId], references: [id])
+  scheduleId  String
+  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  payment     Payment?
+  ticket      Ticket?
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  USED
+  FLAGGED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+  amount        Float
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  paidAt        DateTime?
+}
+
+enum PaymentMethod {
+  MTN_MOBILE_MONEY
+  AIRTEL_MONEY
+  CARD
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Ticket {
+  id          String    @id @default(uuid())
+  bookingId   String    @unique
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  qrCode      String    @unique
+  isValidated Boolean   @default(false)
+  validatedAt DateTime?
+}
+
+model Driver {
+  id            String     @id @default(uuid())
+  userId        String     @unique
+  user          User       @relation(fields: [userId], references: [id])
+  agencyId      String
+  agency        Agency     @relation(fields: [agencyId], references: [id])
+  licenseNumber String
+  schedules     Schedule[]
+}
