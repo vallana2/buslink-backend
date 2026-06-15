@@ -6,6 +6,7 @@ import stationRoutes from "./modules/stations/stations.routes";
 import agencyRoutes from "./modules/agencies/agencies.routes";
 import busRoutes from "./modules/buses/buses.routes";
 import routeRoutes from "./modules/routes/routes.routes";
+import scheduleRoutes from "./modules/schedules/schedules.routes";
 const app = express();
 
 app.use(cors());
@@ -21,4 +22,5 @@ app.use("/api/v1/stations", stationRoutes);
 app.use("/api/v1/agencies", agencyRoutes);
 app.use("/api/v1/buses", busRoutes);
 app.use("/api/v1/routes", routeRoutes);
+app.use("/api/v1/schedules", scheduleRoutes);
 export default app;
