@@ -9,6 +9,7 @@ import routeRoutes from "./modules/routes/routes.routes";
 import scheduleRoutes from "./modules/schedules/schedules.routes";
 import bookingRoutes from "./modules/bookings/bookings.routes";
 import paymentRoutes from "./modules/payments/payments.routes";
+import ticketRoutes from "./modules/tickets/tickets.routes";
 const app = express();
 
 app.use(cors());
@@ -27,4 +28,5 @@ app.use("/api/v1/routes", routeRoutes);
 app.use("/api/v1/schedules", scheduleRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/tickets", ticketRoutes);
 export default app;
