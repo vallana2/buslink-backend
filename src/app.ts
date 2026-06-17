@@ -13,6 +13,8 @@ import ticketRoutes from "./modules/tickets/tickets.routes";
 import driverRoutes from "./modules/drivers/drivers.routes";
 import reportRoutes from "./modules/reports/reports.routes";
 import aiRoutes from "./modules/ai/ai.routes";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 const app = express();
 
 app.use(cors());
@@ -35,4 +37,5 @@ app.use("/api/v1/tickets", ticketRoutes);
 app.use("/api/v1/drivers", driverRoutes);
 app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/ai", aiRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 export default app;
