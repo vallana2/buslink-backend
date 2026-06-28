@@ -143,3 +143,14 @@ export const getAgencyStationsService = async (agencyId: string) => {
 
   return links;
 };
+export const deleteAgencyService = async (id: string) => {
+  const agency = await prisma.agency.findUnique({ where: { id } });
+
+  if (!agency) {
+    throw new Error("Agency not found");
+  }
+
+  await prisma.agency.delete({ where: { id } });
+
+  return { message: "Agency deleted successfully" };
+};

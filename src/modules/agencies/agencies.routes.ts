@@ -4,6 +4,7 @@ import {
   getAllAgencies,
   getAgencyById,
   updateAgency,
+  deleteAgency,
   approveAgency,
   linkAgencyToStation,
   getAgencyStations,
@@ -21,6 +22,7 @@ router.get("/:id/stations", getAgencyStations);
 // System Admin only
 router.post("/", authenticate, authorize("SYSTEM_ADMIN"), createAgency);
 router.put("/:id", authenticate, authorize("SYSTEM_ADMIN"), updateAgency);
+router.delete("/:id", authenticate, authorize("SYSTEM_ADMIN"), deleteAgency);
 router.patch("/:id/approve", authenticate, authorize("SYSTEM_ADMIN"), approveAgency);
 router.post("/:id/stations", authenticate, authorize("SYSTEM_ADMIN"), linkAgencyToStation);
 

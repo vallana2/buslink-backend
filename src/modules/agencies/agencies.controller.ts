@@ -8,6 +8,7 @@ import {
   approveAgencyService,
   linkAgencyToStationService,
   getAgencyStationsService,
+  deleteAgencyService,
 } from "./agencies.service";
 
 export const createAgency = async (
@@ -77,6 +78,19 @@ export const updateAgency = async (
   }
 };
 
+export const deleteAgency = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const result = await deleteAgencyService(id);
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export const approveAgency = async (
   req: Request,
   res: Response
@@ -127,7 +141,6 @@ export const getAgencyStations = async (
   res: Response
 ): Promise<void> => {
   try {
-    // If agency admin, use their own agencyId; if system admin checking, use param
     const agencyId = (req.params.id as string) || (req.user?.agencyId as string);
 
     if (!agencyId) {
