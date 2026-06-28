@@ -15,17 +15,10 @@ model User {
   password  String
   role      Role      @default(PASSENGER)
   agencyId  String?
-  agency    Agency?   @relation(fields: [agencyId], references: [id])
+  createdAt DateTime  @default(now())
   bookings  Booking[]
   driver    Driver?
-  createdAt DateTime  @default(now())
-}
-
-enum Role {
-  PASSENGER
-  AGENCY_ADMIN
-  DRIVER
-  SYSTEM_ADMIN
+  agency    Agency?   @relation(fields: [agencyId], references: [id])
 }
 
 model Station {
@@ -47,19 +40,19 @@ model Agency {
   isApproved     Boolean         @default(false)
   agencyStations AgencyStation[]
   buses          Bus[]
-  routes         Route[]
   drivers        Driver[]
+  routes         Route[]
   users          User[]
 }
 
 model AgencyStation {
-  id            String   @id @default(uuid())
+  id            String  @id @default(uuid())
   agencyId      String
   stationId     String
-  agency        Agency   @relation(fields: [agencyId], references: [id])
-  station       Station  @relation(fields: [stationId], references: [id])
   counterNumber String?
-  isActive      Boolean  @default(true)
+  isActive      Boolean @default(true)
+  agency        Agency  @relation(fields: [agencyId], references: [id])
+  station       Station @relation(fields: [stationId], references: [id])
 
   @@unique([agencyId, stationId])
 }
@@ -67,22 +60,22 @@ model AgencyStation {
 model Bus {
   id          String     @id @default(uuid())
   agencyId    String
-  agency      Agency     @relation(fields: [agencyId], references: [id])
   plateNumber String     @unique
   capacity    Int
   busType     String?
+  agency      Agency     @relation(fields: [agencyId], references: [id])
   schedules   Schedule[]
 }
 
 model Route {
   id            String     @id @default(uuid())
   agencyId      String
-  agency        Agency     @relation(fields: [agencyId], references: [id])
   fromStationId String
   toStationId   String
+  distanceKm    Float?
+  agency        Agency     @relation(fields: [agencyId], references: [id])
   fromStation   Station    @relation("FromStation", fields: [fromStationId], references: [id])
   toStation     Station    @relation("ToStation", fields: [toStationId], references: [id])
-  distanceKm    Float?
   schedules     Schedule[]
 
   @@unique([agencyId, fromStationId, toStationId])
@@ -91,16 +84,65 @@ model Route {
 model Schedule {
   id            String         @id @default(uuid())
   routeId       String
-  route         Route          @relation(fields: [routeId], references: [id])
   busId         String
-  bus           Bus            @relation(fields: [busId], references: [id])
   driverId      String?
-  driver        Driver?        @relation(fields: [driverId], references: [id])
   departureTime DateTime
   arrivalTime   DateTime?
   price         Float
   status        ScheduleStatus @default(SCHEDULED)
   bookings      Booking[]
+  bus           Bus            @relation(fields: [busId], references: [id])
+  driver        Driver?        @relation(fields: [driverId], references: [id])
+  route         Route          @relation(fields: [routeId], references: [id])
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  passengerId String
+  scheduleId  String
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  passenger   User          @relation(fields: [passengerId], references: [id])
+  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
+  payment     Payment?
+  ticket      Ticket?
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  amount        Float
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  paidAt        DateTime?
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+}
+
+model Ticket {
+  id          String    @id @default(uuid())
+  bookingId   String    @unique
+  qrCode      String    @unique
+  isValidated Boolean   @default(false)
+  validatedAt DateTime?
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+}
+
+model Driver {
+  id            String     @id @default(uuid())
+  userId        String     @unique
+  agencyId      String
+  licenseNumber String
+  agency        Agency     @relation(fields: [agencyId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+  schedules     Schedule[]
+}
+
+enum Role {
+  PASSENGER
+  AGENCY_ADMIN
+  DRIVER
+  SYSTEM_ADMIN
 }
 
 enum ScheduleStatus {
@@ -111,35 +153,12 @@ enum ScheduleStatus {
   CANCELLED
 }
 
-model Booking {
-  id          String        @id @default(uuid())
-  passengerId String
-  passenger   User          @relation(fields: [passengerId], references: [id])
-  scheduleId  String
-  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
-  status      BookingStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  payment     Payment?
-  ticket      Ticket?
-}
-
 enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
   USED
   FLAGGED
-}
-
-model Payment {
-  id            String        @id @default(uuid())
-  bookingId     String        @unique
-  booking       Booking       @relation(fields: [bookingId], references: [id])
-  amount        Float
-  method        PaymentMethod
-  status        PaymentStatus @default(PENDING)
-  transactionId String?
-  paidAt        DateTime?
 }
 
 enum PaymentMethod {
@@ -153,23 +172,4 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
-}
-
-model Ticket {
-  id          String    @id @default(uuid())
-  bookingId   String    @unique
-  booking     Booking   @relation(fields: [bookingId], references: [id])
-  qrCode      String    @unique
-  isValidated Boolean   @default(false)
-  validatedAt DateTime?
-}
-
-model Driver {
-  id            String     @id @default(uuid())
-  userId        String     @unique
-  user          User       @relation(fields: [userId], references: [id])
-  agencyId      String
-  agency        Agency     @relation(fields: [agencyId], references: [id])
-  licenseNumber String
-  schedules     Schedule[]
 }

@@ -116,9 +116,8 @@ export const searchSchedules = async (
     const fromCity = req.query.from as string | undefined;
     const toCity = req.query.to as string | undefined;
     const date = req.query.date as string | undefined;
-
-    const schedules = await searchSchedulesService({ fromCity, toCity, date });
-
+    const agencyId = req.query.agencyId as string | undefined;
+    const schedules = await searchSchedulesService({ fromCity, toCity, date, agencyId });
     res.status(200).json({ schedules });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

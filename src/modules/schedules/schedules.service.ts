@@ -215,18 +215,22 @@ export const searchSchedulesService = async (params: {
   fromCity?: string;
   toCity?: string;
   date?: string;
+  agencyId?: string;
 }) => {
   const where: any = {
     status: "SCHEDULED",
   };
 
-  if (params.fromCity || params.toCity) {
+  if (params.fromCity || params.toCity || params.agencyId) {
     where.route = {};
     if (params.fromCity) {
       where.route.fromStation = { city: { equals: params.fromCity, mode: "insensitive" } };
     }
     if (params.toCity) {
       where.route.toStation = { city: { equals: params.toCity, mode: "insensitive" } };
+    }
+    if (params.agencyId) {
+      where.route.agencyId = params.agencyId;
     }
   }
 
@@ -241,7 +245,6 @@ export const searchSchedulesService = async (params: {
       lte: endOfDay,
     };
   } else {
-    // Default: only future schedules
     where.departureTime = { gte: new Date() };
   }
 
@@ -263,7 +266,6 @@ export const searchSchedulesService = async (params: {
     orderBy: { departureTime: "asc" },
   });
 
-  // Filter out fully booked, add available seats
   return schedules
     .map((s) => ({
       id: s.id,
