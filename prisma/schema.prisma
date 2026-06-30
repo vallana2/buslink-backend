@@ -56,14 +56,15 @@ model AgencyStation {
 
   @@unique([agencyId, stationId])
 }
-
 model Bus {
   id          String     @id @default(uuid())
   agencyId    String
+  driverId    String?
   plateNumber String     @unique
   capacity    Int
   busType     String?
   agency      Agency     @relation(fields: [agencyId], references: [id])
+  driver      Driver?    @relation(fields: [driverId], references: [id])
   schedules   Schedule[]
 }
 
@@ -136,6 +137,7 @@ model Driver {
   agency        Agency     @relation(fields: [agencyId], references: [id])
   user          User       @relation(fields: [userId], references: [id])
   schedules     Schedule[]
+  buses         Bus[]
 }
 
 enum Role {

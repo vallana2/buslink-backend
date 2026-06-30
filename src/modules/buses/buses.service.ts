@@ -5,6 +5,7 @@ export const createBusService = async (
     plateNumber: string;
     capacity: number;
     busType?: string;
+    driverId?: string;
   },
   agencyId: string
 ) => {
@@ -16,12 +17,28 @@ export const createBusService = async (
     throw new Error("A bus with this plate number already exists");
   }
 
+  if (data.driverId) {
+    const driver = await prisma.driver.findUnique({
+      where: { id: data.driverId },
+    });
+    if (!driver) {
+      throw new Error("Driver not found");
+    }
+    if (driver.agencyId !== agencyId) {
+      throw new Error("This driver does not belong to your agency");
+    }
+  }
+
   const bus = await prisma.bus.create({
     data: {
       plateNumber: data.plateNumber,
       capacity: data.capacity,
       busType: data.busType,
+      driverId: data.driverId || null,
       agencyId,
+    },
+    include: {
+      driver: { include: { user: { select: { name: true, phone: true } } } },
     },
   });
 
@@ -31,6 +48,9 @@ export const createBusService = async (
 export const getAgencyBusesService = async (agencyId: string) => {
   const buses = await prisma.bus.findMany({
     where: { agencyId },
+    include: {
+      driver: { include: { user: { select: { name: true, phone: true } } } },
+    },
     orderBy: { plateNumber: "asc" },
   });
 
@@ -40,6 +60,9 @@ export const getAgencyBusesService = async (agencyId: string) => {
 export const getBusByIdService = async (id: string, agencyId: string) => {
   const bus = await prisma.bus.findUnique({
     where: { id },
+    include: {
+      driver: { include: { user: { select: { name: true, phone: true } } } },
+    },
   });
 
   if (!bus) {
@@ -56,7 +79,7 @@ export const getBusByIdService = async (id: string, agencyId: string) => {
 export const updateBusService = async (
   id: string,
   agencyId: string,
-  data: { plateNumber?: string; capacity?: number; busType?: string }
+  data: { plateNumber?: string; capacity?: number; busType?: string; driverId?: string | null }
 ) => {
   const bus = await prisma.bus.findUnique({ where: { id } });
 
@@ -68,9 +91,24 @@ export const updateBusService = async (
     throw new Error("You do not have access to this bus");
   }
 
+  if (data.driverId) {
+    const driver = await prisma.driver.findUnique({
+      where: { id: data.driverId },
+    });
+    if (!driver) {
+      throw new Error("Driver not found");
+    }
+    if (driver.agencyId !== agencyId) {
+      throw new Error("This driver does not belong to your agency");
+    }
+  }
+
   const updated = await prisma.bus.update({
     where: { id },
     data,
+    include: {
+      driver: { include: { user: { select: { name: true, phone: true } } } },
+    },
   });
 
   return updated;
